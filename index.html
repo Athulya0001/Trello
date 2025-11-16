@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trello Board</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="dialogbox.css" />
+    <link rel="stylesheet" href="resposive.css">
+    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header>
+      <nav>
+        <h1 id="logo-name">My Trello Board</h1>
+        <div id="add">
+          <button id="add-board">+ Add New Board</button>
+          <select name="my-boards" id="my-boards">
+            <option value="defaultBoard">My Trello Board</option>
+          </select>
+        </div>
+      </nav>
+    </header>
+
+    <section class="board" id="defaultBoard">
+      <div class="list-box">
+        <div id="todo" class="list">
+          <div class="list-header">
+            <h2>To Do</h2>
+          </div>
+          <div class="cards"></div>
+          <button class="add-btn">+ Add Card</button>
+        </div>
+      </div>
+
+      <div class="list-box">
+        <div id="progress" class="list">
+          <div class="list-header">
+            <h2>In Progress</h2>
+          </div>
+          <div class="cards"></div>
+          <button class="add-btn">+ Add Card</button>
+        </div>
+      </div>
+
+      <div class="list-box">
+        <div id="done" class="list">
+          <div class="list-header">
+            <h2>Done</h2>
+          </div>
+          <div class="cards"></div>
+          <button class="add-btn">+ Add Card</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="dialog-box">
+      <div class="dialog-content">
+        <h2>Add New Card</h2>
+        <input type="text" id="cardInput" placeholder="Card title..." />
+        <textarea
+          name="cardContent"
+          id="cardContent"
+          placeholder="About card..."
+        ></textarea>
+        <div class="dialog-btn">
+          <button id="cancelBtn" class="btn-cancel">Cancel</button>
+          <input type="submit" id="addBtn" class="btn-add" value="Add Card" />
+        </div>
+      </div>
+    </div>
+
+    <div class="board-box">
+      <div class="dialog-content">
+        <h2>Add New Board</h2>
+        <input type="text" id="boardInput" placeholder="Board title..." />
+        <div class="dialog-btn">
+          <button id="btnCancel" class="btn-cancel">Cancel</button>
+          <input
+            type="submit"
+            id="new-board"
+            class="btn-add"
+            value="Add Board"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="add-list-box">
+      <div class="dialog-content">
+        <h2>Add New List</h2>
+        <input type="text" id="listInput" placeholder="List title..." />
+        <div class="dialog-btn">
+          <button id="listCancel" class="btn-cancel">Cancel</button>
+          <input type="submit" id="new-list" class="btn-add" value="Add List" />
+        </div>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
