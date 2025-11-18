@@ -32,36 +32,42 @@ let draggedCard = null;
 let editMode = false;
 let cardBeingEdited = null;
 
-const createElement = (element) => {
-  return document.createElement(element);
-};
-
 // board functions
 // save baords to localstorage
 const saveBoard = () => {
   const boards = [];
-  const boardSection = document.querySelectorAll(".board");
+  const boardSections = document.querySelectorAll(".board");
 
-  boardSection.forEach((board) => {
+  boardSections.forEach((board) => {
     const lists = board.querySelectorAll(".list");
     const listData = [];
 
     lists.forEach((list) => {
       const cards = Array.from(list.querySelectorAll(".card")).map((card) => {
-        const title = card.querySelector("h3")?.textContent || "";
-        const text = card.querySelector("span")?.textContent || "";
+        const title = card.querySelector("h3").textContent.trim();
+        const contentEl = card.querySelector(".card-content");
+
+        let text = "";
+        if (contentEl.querySelector("ul")) {
+          text = Array.from(contentEl.querySelectorAll("li"))
+            .map((li) => li.textContent.trim())
+            .join("\n");
+        } else {
+          text = contentEl.textContent.trim();
+        }
+
         return { title, text };
       });
 
       listData.push({
         id: list.id,
-        cards: cards,
+        title: list.querySelector(".list-header h2").textContent.trim(),
+        cards,
       });
     });
 
     boards.push({
       id: board.id,
-      content: board.innerHTML,
       lists: listData,
     });
   });
@@ -69,51 +75,92 @@ const saveBoard = () => {
   localStorage.setItem("boards", JSON.stringify(boards));
 };
 
-// laoding board data from local storage
 const loadBoards = () => {
-  const existingBoards = JSON.parse(localStorage.getItem("boards") || "[]");
-  if (!existingBoards.length) return;
+  const stored = JSON.parse(localStorage.getItem("boards") || "[]");
+  if (!stored.length) return;
 
-  existingBoards.forEach((board) => {
-    if (board.id === "defaultBoard") {
-      const defaultLists = ["todo", "progress", "done"];
-      defaultLists.forEach((listId) => {
-        const list = document.getElementById(listId);
-        if (list) {
-          const cardsContainer = list.querySelector(".cards");
-          if (cardsContainer) cardsContainer.innerHTML = "";
-        }
-      });
+  stored.forEach((boardData) => {
+    let board = document.getElementById(boardData.id);
 
-      if (board.lists) {
-        board.lists.forEach((listData) => loadList(listData));
+    if (!board) {
+      board = createElement("section");
+      board.classList.add("board");
+      board.id = boardData.id;
+      board.style.display = "none";
+
+      board.innerHTML = `
+        <div class="board-header">
+          <button id="add-list">+ Add Lists</button>
+          <button class="delete-board">Delete Board</button>
+        </div>
+      `;
+
+      document.body.insertBefore(board, boardBox);
+
+      const option = createElement("option");
+      option.value = boardData.id;
+      option.textContent = boardData.id.replace(/-/g, " ");
+      myBoards.appendChild(option);
+    }
+
+    const isDefaultBoard = boardData.id === "defaultBoard";
+
+    boardData.lists.forEach((listData) => {
+      let list = document.getElementById(listData.id);
+
+      if (!list) {
+        const wrapper = createElement("div");
+        wrapper.classList.add("list-box");
+
+        list = createElement("div");
+        list.classList.add("list");
+        list.id = listData.id;
+
+        wrapper.appendChild(list);
+        board.appendChild(wrapper);
       }
-      return;
-    }
 
-    if (document.getElementById(board.id)) return;
+      const editableHeader = !isDefaultBoard
+        ? `<button class="delete-list">X</button>`
+        : "";
 
-    const section = document.createElement("section");
-    section.classList.add("board");
+      const contentEditable = !isDefaultBoard ? "contenteditable='true'" : "";
 
-    section.id = board.id;
-    section.innerHTML = board.content;
-    section.style.display = "none";
+      list.innerHTML = `
+        <div class="list-header">
+          <h2 ${contentEditable}>${listData.title}</h2>
+          ${editableHeader}
+        </div>
 
-    section.querySelectorAll(".cards").forEach((container) => {
-      container.innerHTML = "";
+        <div class="cards"></div>
+        <button class="add-btn">+ Add Card</button>
+      `;
+
+      const h2 = list.querySelector(".list-header h2");
+      const originalTitle = listData.title;
+
+      if (!isDefaultBoard) {
+        h2.addEventListener("blur", () => {
+          const newTitle = h2.textContent.trim();
+          if (newTitle && newTitle !== originalTitle) {
+            const newListId = newTitle.toLowerCase().replace(/\s+/g, "-");
+            list.id = newListId;
+            saveBoard();
+          } else if (!newTitle) {
+            h2.textContent = originalTitle;
+          }
+        });
+
+        h2.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            h2.blur();
+          }
+        });
+      }
+
+      loadList(listData);
     });
-
-    document.body.insertBefore(section, boardBox);
-
-    if (board.lists) {
-      board.lists.forEach((listData) => loadList(listData));
-    }
-
-    const option = document.createElement("option");
-    option.value = board.id;
-    option.textContent = board.id.replace(/-/g, " ");
-    myBoards.appendChild(option);
   });
 };
 
@@ -194,8 +241,6 @@ function deleteBoard(e) {
 
   const boardId = boardSection.id;
 
-  boardSection.remove();
-
   const optionToRemove = myBoards.querySelector(`option[value="${boardId}"]`);
   if (optionToRemove) optionToRemove.remove();
 
@@ -203,7 +248,7 @@ function deleteBoard(e) {
     showDefaultBoard();
   }
 
-  saveBoard();
+  deleteBox(boardSection);
 
   window.location.reload();
 }
@@ -228,20 +273,6 @@ cancel(cancelBoard, boardBox); //boardBox display = none;
 cancel(cancelList, listBox); //listBox display = none;
 cancel(cancelCard, dialogBox); //dialogBox display - none;
 
-// diaplaying popup box for list and cards
-document.addEventListener("click", (e) => {
-  if (e.target && e.target.id === "add-list") {
-    showBox(listBox, listInput);
-  }
-  if (e.target && e.target.classList.contains("add-btn")) {
-    const listBox = e.target.closest(".list-box");
-    if (listBox) {
-      cardsContainer = listBox.querySelector(".cards");
-      showBox(dialogBox, cardInput);
-    }
-  }
-});
-
 createList.addEventListener("click", () => {
   const listTitle = listInput.value.trim();
   if (!listTitle) return;
@@ -256,20 +287,27 @@ createList.addEventListener("click", () => {
 
   const listEl = createElement("div");
   listEl.classList.add("list");
-  listEl.id = listTitle.toLowerCase();
+  listEl.id = listTitle.toLowerCase().replace(/\s+/g, "-");
 
   const header = createElement("div");
   header.classList.add("list-header");
 
+  const isDefaultBoard = currentBoard.id === "defaultBoard";
+
   const h2 = createElement("h2");
   h2.textContent = listTitle;
+  if (!isDefaultBoard) {
+    h2.contentEditable = true;
+  }
+  header.appendChild(h2);
 
   const deleteListBtn = createElement("button");
-  deleteListBtn.classList.add("delete-list");
   deleteListBtn.textContent = "X";
 
-  header.appendChild(h2);
-  header.appendChild(deleteListBtn);
+  if (!isDefaultBoard) {
+    deleteListBtn.classList.add("delete-list");
+    header.appendChild(deleteListBtn);
+  }
 
   const cards = createElement("div");
   cards.classList.add("cards");
@@ -285,6 +323,26 @@ createList.addEventListener("click", () => {
   listBoxEl.appendChild(listEl);
 
   currentBoard.appendChild(listBoxEl);
+
+  if (!isDefaultBoard) {
+    h2.addEventListener("blur", () => {
+      const newTitle = h2.textContent.trim();
+      if (newTitle && newTitle !== listTitle) {
+        const newListId = newTitle.toLowerCase().replace(/\s+/g, "-");
+        listEl.id = newListId;
+        saveBoard();
+      } else if (!newTitle) {
+        h2.textContent = listTitle;
+      }
+    });
+
+    h2.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        h2.blur();
+      }
+    });
+  }
 
   listBox.style.display = "none";
   listInput.value = "";
@@ -302,22 +360,9 @@ function deleteList(e) {
   );
 
   if (currentBoard && currentBoard.id !== "defaultBoard" && listBoxEl) {
-    listBoxEl.remove();
-    saveBoard();
+    deleteBox(listBoxEl);
   }
 }
-
-// const saveCards = (listId) => {
-//   const list = document.getElementById(listId);
-//   if(list){
-//     const cards = Array.from(list.querySelectorAll(".card")).map((card) => {
-//       const title = card.querySelector("h2")?.textContent || "";
-//       const text = card.querySelector("span")?.textContent || "";
-//       return { title, text };
-//     });
-//     localStorage.setItem(listId, JSON.stringify(cards));
-//   }
-// };
 
 function loadList(listData) {
   const { id: listId, cards = [] } = listData;
@@ -328,24 +373,39 @@ function loadList(listData) {
   container.innerHTML = "";
 
   cards.forEach(({ title, text }) => {
-    const card = document.createElement("div");
+    const card = createElement("div");
     card.classList.add("card");
     card.setAttribute("draggable", true);
 
-    const cardTitle = document.createElement("h3");
+    const cardTitle = createElement("h3");
     cardTitle.textContent = title;
 
-    const cardText = document.createElement("span");
-    cardText.textContent = text;
+    const cardText = createElement("span");
+    cardText.classList.add("card-content");
 
-    const btnContainer = document.createElement("div");
+    if (text) {
+      const lines = text.split("\n").filter((line) => line.trim());
+      if (lines.length > 1) {
+        const ul = createElement("ul");
+        lines.forEach((line) => {
+          const li = createElement("li");
+          li.textContent = line.trim();
+          ul.appendChild(li);
+        });
+        cardText.appendChild(ul);
+      } else {
+        cardText.textContent = text;
+      }
+    }
+
+    const btnContainer = createElement("div");
     btnContainer.classList.add("btn-container");
 
-    const editBtn = document.createElement("button");
+    const editBtn = createElement("button");
     editBtn.textContent = "Edit";
     editBtn.classList.add("edit-btn");
 
-    const deleteBtn = document.createElement("button");
+    const deleteBtn = createElement("button");
     deleteBtn.textContent = "X";
     deleteBtn.classList.add("delete-btn");
 
@@ -367,7 +427,14 @@ function loadList(listData) {
     editBtn.addEventListener("click", () => {
       dialogBox.style.display = "flex";
       cardInput.value = cardTitle.textContent;
-      cardContent.value = cardText.textContent;
+
+      if (cardText.querySelector("ul")) {
+        const listItems = Array.from(cardText.querySelectorAll("li"));
+        cardContent.value = listItems.map((li) => li.textContent).join("\n");
+      } else {
+        cardContent.value = cardText.textContent;
+      }
+
       addBtn.value = "Save";
 
       editMode = true;
@@ -381,7 +448,7 @@ const addNewCard = () => {
   let cardTitleValue = cardInput.value.trim();
   let cardValue = cardContent.value.trim();
 
-  if (cardTitleValue === "" || cardValue === "") return;
+  if (cardTitleValue === "") return;
 
   const card = createElement("div");
   card.classList.add("card");
@@ -391,7 +458,22 @@ const addNewCard = () => {
   cardTitle.textContent = cardTitleValue;
 
   const cardText = createElement("span");
-  cardText.textContent = cardValue;
+  cardText.classList.add("card-content");
+
+  if (cardValue) {
+    const lines = cardValue.split("\n").filter((line) => line.trim());
+    if (lines.length > 1) {
+      const ul = createElement("ul");
+      lines.forEach((line) => {
+        const li = createElement("li");
+        li.textContent = line.trim();
+        ul.appendChild(li);
+      });
+      cardText.appendChild(ul);
+    } else {
+      cardText.textContent = cardValue;
+    }
+  }
 
   const btnContainer = createElement("div");
   btnContainer.classList.add("btn-container");
@@ -422,15 +504,21 @@ const addNewCard = () => {
   saveBoard();
 
   deleteBtn.addEventListener("click", () => {
-    card.remove();
-    saveBoard();
+    deleteBox(card);
   });
 
   editBtn.addEventListener("click", () => {
     dialogBox.style.display = "flex";
-    cardInput.value = cardTitleValue;
-    cardContent.value = cardValue;
 
+    cardInput.value = card.querySelector("h3").textContent;
+    const contentEl = card.querySelector(".card-content");
+    if (contentEl.querySelector("ul")) {
+      cardContent.value = Array.from(contentEl.querySelectorAll("li"))
+        .map((li) => li.textContent)
+        .join("\n");
+    } else {
+      cardContent.value = contentEl.textContent;
+    }
     addBtn.value = "Save";
 
     editMode = true;
@@ -445,10 +533,25 @@ addBtn.addEventListener("click", () => {
 
     if (newTitle !== "") {
       const titleEl = cardBeingEdited.querySelector("h3");
-      const textEl = cardBeingEdited.querySelector("span");
+      const textEl = cardBeingEdited.querySelector(".card-content");
 
       titleEl.textContent = newTitle;
-      textEl.textContent = newContent;
+      textEl.innerHTML = "";
+
+      if (newContent) {
+        const lines = newContent.split("\n").filter((line) => line.trim());
+        if (lines.length > 1) {
+          const ul = createElement("ul");
+          lines.forEach((line) => {
+            const li = createElement("li");
+            li.textContent = line.trim();
+            ul.appendChild(li);
+          });
+          textEl.appendChild(ul);
+        } else {
+          textEl.textContent = newContent;
+        }
+      }
 
       saveBoard();
     }
@@ -514,7 +617,18 @@ cardInput.addEventListener("keydown", (e) => {
   }
 });
 
+// diaplaying popup box for list and cards
 document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "add-list") {
+    showBox(listBox, listInput);
+  }
+  if (e.target && e.target.classList.contains("add-btn")) {
+    const listBox = e.target.closest(".list-box");
+    if (listBox) {
+      cardsContainer = listBox.querySelector(".cards");
+      showBox(dialogBox, cardInput);
+    }
+  }
   deleteBoard(e);
   deleteList(e);
 });

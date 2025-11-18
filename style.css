@@ -6,6 +6,7 @@
 
 body {
   background-image: url(./image/green-tropical-leaves-exquisite-texture-a-captivating-abstract-nature-leaf-background-with-vintage-dark-tones-perfect-as-desktop-wallpaper_9975760.jpg);
+  /* background-image: linear-gradient(135deg, rgba(251, 130, 190, 0.6), #015647fc); */
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -251,6 +252,24 @@ nav h1 {
   scrollbar-color: #a8edea rgba(255, 255, 255, 0.1);
 }
 
+.cards::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cards::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.cards::-webkit-scrollbar-thumb {
+  background: #a8edea;
+  border-radius: 10px;
+}
+
+.cards::-webkit-scrollbar-thumb:hover {
+  background: #8cd9d6;
+}
+
 .card {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -258,15 +277,14 @@ nav h1 {
   width: 85%;
   margin-top: 10px;
   border-radius: 12px;
-  padding: 14px 18px;
+  padding: 16px 20px;
   color: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 10px;
+  gap: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   cursor: grab;
 }
 
@@ -274,20 +292,71 @@ nav h1 {
   transform: translateY(-3px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
   background: rgba(255, 255, 255, 0.25);
-}
-
-.card span {
-  text-align: justify;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .card:active {
-  cursor: grabbing;
   transform: scale(0.98);
 }
 
-.card span {
+.card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  text-align: left;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.95rem;
   word-break: break-word;
-  white-space: normal;
+}
+
+.card-content ul {
+  margin: 4px 0 0 0;
+  padding-left: 22px;
+  list-style-type: none;
+}
+
+.card-content li {
+  position: relative;
+  margin: 8px 0;
+  padding-left: 8px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.93rem;
+}
+
+.card-content li::before {
+  content: "•";
+  position: absolute;
+  left: -14px;
+  color: #a8edea;
+  font-size: 1.3em;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.card-content li:hover::before {
+  color: #fed6e3;
+  transform: scale(1.2);
+  transition: all 0.2s ease;
+}
+
+.btn-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .add-btn {
@@ -323,43 +392,189 @@ nav h1 {
 .edit-btn,
 .delete-btn {
   border: none;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   color: #f1f1f1;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .edit-btn:hover {
   background: rgba(66, 250, 164, 0.741);
   color: #eafff5;
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(0, 255, 180, 0.25);
+  box-shadow: 0 4px 8px rgba(0, 255, 180, 0.3);
 }
 
 .delete-btn:hover {
   background: rgba(249, 51, 51, 0.732);
   color: #ffeaea;
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(255, 0, 0, 0.25);
+  box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);
 }
 
 .edit-btn:active,
 .delete-btn:active {
   transform: translateY(0);
-  box-shadow: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.btn-container {
-  display: flex;
-  justify-content: end;
-  gap: 8px;
-  flex-shrink: 0;
-  width: 100%;
-  border-radius: 8px;
+.card.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.card.hide {
+  opacity: 0;
+}
+
+@media (max-width: 1024px) {
+  .card {
+    padding: 14px 18px;
+    gap: 10px;
+  }
+
+  .card h3 {
+    font-size: 1.1rem;
+  }
+
+  .card-content {
+    font-size: 0.92rem;
+  }
+
+  .card-content li {
+    font-size: 0.9rem;
+    margin: 7px 0;
+  }
+
+  .card-content ul {
+    padding-left: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    width: 90%;
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .card h3 {
+    font-size: 1.05rem;
+  }
+
+  .card-content {
+    font-size: 0.9rem;
+  }
+
+  .card-content li {
+    font-size: 0.88rem;
+    margin: 6px 0;
+  }
+  
+  .card-content ul {
+    padding-left: 18px;
+  }
+
+  .card-content li::before {
+    left: -12px;
+    font-size: 1.2em;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+
+  .btn-container {
+    padding-top: 6px;
+  }
+}
+
+@media (max-width: 425px) {
+  .card {
+    width: 95%;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .card h3 {
+    font-size: 1rem;
+  }
+
+  .card-content {
+    font-size: 0.88rem;
+  }
+
+  .card-content li {
+    font-size: 0.85rem;
+    margin: 5px 0;
+  }
+  
+  .card-content ul {
+    padding-left: 16px;
+  }
+
+  .card-content li::before {
+    left: -11px;
+    font-size: 1.15em;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .btn-container {
+    gap: 6px;
+    padding-top: 6px;
+  }
+}
+
+@media (max-width: 375px) {
+  .card {
+    padding: 10px 12px;
+    gap: 7px;
+  }
+
+  .card h3 {
+    font-size: 0.95rem;
+  }
+
+  .card-content {
+    font-size: 0.85rem;
+  }
+
+  .card-content li {
+    font-size: 0.82rem;
+    margin: 4px 0;
+  }
+
+  .card-content ul {
+    padding-left: 14px;
+  }
+
+  .card-content li::before {
+    left: -10px;
+    font-size: 1.1em;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .btn-container {
+    gap: 5px;
+    padding-top: 5px;
+  }
 }

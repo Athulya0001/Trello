@@ -1,3 +1,8 @@
+// Create element
+const createElement = (element) => {
+  return document.createElement(element);
+};
+
 // escape key function for cancel box function
 function showBox(targetBox,inputBtn) {
   targetBox.style.display = "flex";
@@ -18,4 +23,10 @@ function cancel(btn, targetBox) {
   btn.addEventListener("click", () => {
     targetBox.style.display = "none";
   });
+}
+
+// delete function
+function deleteBox(element){
+  element.remove();
+  saveBoard();
 }
